@@ -9,6 +9,15 @@ pipeline {
             }
         }
 
+        
+        stage('Check Docker') {
+            steps {
+                bat '"C:\\Users\\mdnik\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe" version'
+                bat '"C:\\Users\\mdnik\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe" compose version'
+            }
+        }
+
+
         stage('Build Docker Image') {
             steps {
                 bat 'docker compose build'
