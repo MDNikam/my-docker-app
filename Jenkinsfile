@@ -1,4 +1,4 @@
-
+```groovy
 pipeline {
     agent any
 
@@ -9,30 +9,28 @@ pipeline {
             }
         }
 
-        
         stage('Check Docker') {
             steps {
                 bat '"C:\\Users\\mdnik\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe" version'
-                bat '"C:\\Users\\mdnik\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe" compose version'
+                bat '"C:\\Users\\mdnik\\.docker\\cli-plugins\\docker-compose.exe" version'
             }
         }
 
-
         stage('Build Docker Image') {
             steps {
-                bat 'docker compose build'
+                bat '"C:\\Users\\mdnik\\.docker\\cli-plugins\\docker-compose.exe" build'
             }
         }
 
         stage('Deploy Application') {
             steps {
-                bat 'docker compose up -d --force-recreate'
+                bat '"C:\\Users\\mdnik\\.docker\\cli-plugins\\docker-compose.exe" up -d --force-recreate'
             }
         }
 
         stage('Verify Deployment') {
             steps {
-                bat 'docker compose ps'
+                bat '"C:\\Users\\mdnik\\.docker\\cli-plugins\\docker-compose.exe" ps'
                 bat 'curl.exe -f http://localhost:5000/health'
             }
         }
@@ -40,10 +38,11 @@ pipeline {
 
     post {
         success {
-            echo 'Application deployed successfully!'
+            echo 'Deployment successful!'
         }
         failure {
             echo 'Deployment failed. Check Console Output.'
         }
     }
 }
+```
