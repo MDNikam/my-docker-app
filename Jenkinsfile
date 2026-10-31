@@ -8,6 +8,18 @@ pipeline {
                 checkout scm
             }
         }
+        
+        stage('SonarQube Analysis') {
+            steps {
+                script {
+                    def scannerHome = tool 'SonarScanner'
+
+                    withSonarQubeEnv('SonarQube') {
+                        bat "\"${scannerHome}\\bin\\sonar-scanner.bat\""
+                    }
+                }
+            }
+        }
 
         stage('Check Docker and Trivy') {
             steps {
@@ -42,7 +54,7 @@ pipeline {
         stage('Verify Deployment') {
             steps {
                 bat '"C:\\Users\\mdnik\\.docker\\cli-plugins\\docker-compose.exe" ps'
-                bat 'curl.exe -f http://localhost:5000/health'
+                bat 'curl.exe -f http://127.0.0.1:5000/health'
             }
         }
     }
