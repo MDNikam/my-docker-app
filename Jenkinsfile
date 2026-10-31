@@ -3,12 +3,13 @@ pipeline {
     agent any
 
     stages {
+
         stage('Checkout') {
             steps {
                 checkout scm
             }
         }
-        
+
         stage('SonarQube Analysis') {
             steps {
                 script {
@@ -21,10 +22,33 @@ pipeline {
             }
         }
 
+        stage('Quality Gate') {
+            steps {
+                timeout(time: 5, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+
+        stage('OWASP Dependency Check') {
+            steps {
+                dependencyCheck(
+                    odcInstallation: 'DP-Check',
+                    additionalArguments: '--scan . --format XML --format HTML --out dependency-check-report --enableExperimental'
+                )
+
+                dependencyCheckPublisher(
+                    pattern: 'dependency-check-report.xml'
+                )
+            }
+        }
+
         stage('Check Docker and Trivy') {
             steps {
                 bat '"C:\\Users\\mdnik\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe" version'
+
                 bat '"C:\\Users\\mdnik\\.docker\\cli-plugins\\docker-compose.exe" version'
+
                 bat '"C:\\Trivy\\trivy.exe" --version'
             }
         }
@@ -40,7 +64,7 @@ pipeline {
                 // Report HIGH and CRITICAL vulnerabilities
                 bat '"C:\\Trivy\\trivy.exe" image --scanners vuln --severity HIGH,CRITICAL my-docker-app-pipeline-web:latest'
 
-                // Block deployment only if CRITICAL vulnerabilities exist
+                // Block deployment if CRITICAL vulnerabilities exist
                 bat '"C:\\Trivy\\trivy.exe" image --scanners vuln --severity CRITICAL --exit-code 1 my-docker-app-pipeline-web:latest'
             }
         }
@@ -54,6 +78,7 @@ pipeline {
         stage('Verify Deployment') {
             steps {
                 bat '"C:\\Users\\mdnik\\.docker\\cli-plugins\\docker-compose.exe" ps'
+
                 bat 'curl.exe -f http://127.0.0.1:5000/health'
             }
         }
@@ -63,6 +88,7 @@ pipeline {
         success {
             echo 'Build, security scan and deployment successful!'
         }
+
         failure {
             echo 'Pipeline failed. Check Console Output.'
         }
